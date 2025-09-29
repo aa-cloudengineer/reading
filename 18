@@ -1,15 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Flame } from 'lucide-react';
-import { UserProgress } from '../types';
+import { Trophy, Flame, LogOut } from 'lucide-react';
+import { Profile } from '../types';
 
 interface HeaderProps {
-  userProgress: UserProgress;
+  profile: Profile | null;
   onHomeClick: () => void;
+  onSignOut: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ userProgress, onHomeClick }) => {
-  const progressPercentage = (userProgress.xp % 1000) / 10;
+const Header: React.FC<HeaderProps> = ({ profile, onHomeClick, onSignOut }) => {
+  const progressPercentage = profile ? (profile.xp % 1000) / 10 : 0;
 
   return (
     <motion.header 
@@ -23,9 +24,7 @@ const Header: React.FC<HeaderProps> = ({ userProgress, onHomeClick }) => {
           className="flex items-center space-x-3 cursor-pointer"
           onClick={onHomeClick}
         >
-          <motion.div
-            whileHover={{ rotate: 10 }}
-          >
+          <motion.div whileHover={{ rotate: 10 }}>
             <span className="text-3xl">🦊</span>
           </motion.div>
           <div>
@@ -34,32 +33,46 @@ const Header: React.FC<HeaderProps> = ({ userProgress, onHomeClick }) => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-6 bg-brand-light p-2 rounded-full">
-          {/* Level & XP */}
-          <div className="flex items-center space-x-2">
-            <Trophy className="h-5 w-5 text-brand-dark" />
-            <div className="text-left">
-              <span className="font-semibold text-sm">Level {userProgress.level}</span>
-              <div className="w-20 bg-gray-300 rounded-full h-1.5 mt-0.5">
-                <motion.div 
-                  className="bg-gradient-to-r from-accent to-secondary h-1.5 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPercentage}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                />
+        {profile && (
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6 bg-brand-light p-2 rounded-full">
+              {/* Level & XP */}
+              <div className="flex items-center space-x-2">
+                <Trophy className="h-5 w-5 text-brand-dark" />
+                <div className="text-left">
+                  <span className="font-semibold text-sm">Level {profile.level}</span>
+                  <div className="w-20 bg-gray-300 rounded-full h-1.5 mt-0.5">
+                    <motion.div 
+                      className="bg-gradient-to-r from-accent to-secondary h-1.5 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercentage}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Streak */}
+              <div className="flex items-center space-x-2">
+                <Flame className="h-5 w-5 text-accent" />
+                <div className="text-left">
+                  <span className="font-semibold text-sm">{profile.streak_days}</span>
+                  <p className="text-xs text-gray-600">day streak</p>
+                </div>
               </div>
             </div>
+            
+            <motion.button
+              onClick={onSignOut}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-600 p-2.5 rounded-full transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title="Sign Out"
+            >
+              <LogOut className="h-5 w-5" />
+            </motion.button>
           </div>
-
-          {/* Streak */}
-          <div className="flex items-center space-x-2">
-            <Flame className="h-5 w-5 text-accent" />
-            <div className="text-left">
-              <span className="font-semibold text-sm">{userProgress.streakDays}</span>
-              <p className="text-xs text-gray-600">day streak</p>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </motion.header>
   );

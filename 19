@@ -2,18 +2,17 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, Square, Play, CheckCircle, Volume2, RotateCcw } from 'lucide-react';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { ReadingSession } from '../types';
+import { Story } from '../types';
 
 interface ReadingInterfaceProps {
-  session: ReadingSession;
+  story: Story;
   onComplete: (score: number) => void;
   onWordSelect: (word: string | null) => void;
 }
 
-const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ session, onComplete, onWordSelect }) => {
+const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ story, onComplete, onWordSelect }) => {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   
   const {
     isRecording,
@@ -33,7 +32,6 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ session, onComplete
   const playRecording = () => {
     if (audioBlob) {
       const audio = new Audio(URL.createObjectURL(audioBlob));
-      setCurrentAudio(audio);
       audio.play();
       setIsPlaying(true);
       audio.onended = () => setIsPlaying(false);
@@ -58,11 +56,11 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ session, onComplete
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-6 h-full flex flex-col">
       <div className="flex-grow">
-        <h2 className="text-3xl font-bold text-brand-dark mb-1">{session.title}</h2>
+        <h2 className="text-3xl font-bold text-brand-dark mb-1">{story.title}</h2>
         <p className="text-gray-500 mb-6">Click any word to get help from Uztaz!</p>
 
         <div className="text-lg leading-relaxed text-gray-700 max-h-[50vh] overflow-y-auto pr-2">
-          {session.text.split(/(\s+)/).map((segment, index) => (
+          {story.text.split(/(\s+)/).map((segment, index) => (
             <React.Fragment key={index}>
               {segment.match(/\s+/) ? (
                 <span>{segment}</span>
@@ -146,7 +144,7 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ session, onComplete
           </motion.button>
 
           <motion.button
-            onClick={() => onComplete(92)} // Dummy score
+            onClick={() => onComplete(Math.floor(Math.random() * (98 - 85 + 1) + 85))} // Random score between 85-98
             className="flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-semibold transition-all shadow-md bg-success text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
