@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Star, Clock, TrendingUp, Award, Book } from 'lucide-react';
+import { Play, Star, Clock, TrendingUp, Award, BookOpen } from 'lucide-react';
 import { ReadingSession, UserProgress } from '../types';
 
 interface DashboardProps {
@@ -18,135 +18,112 @@ const Dashboard: React.FC<DashboardProps> = ({
     {
       id: '1',
       title: 'The Little Red Hen',
-      text: 'Once upon a time, there was a little red hen who lived on a farm. She was a very hardworking hen and always busy with her daily tasks. One day, while walking around the farmyard, she found some grains of wheat.',
+      text: 'Once upon a time, there was a little red hen who lived on a farm. She was a very hardworking hen...',
       difficulty: 'beginner',
       recordings: []
     },
     {
       id: '2',
-      title: 'The Solar System',
-      text: 'Our solar system consists of the Sun and all the celestial bodies that orbit around it. This includes eight planets, their moons, asteroids, comets, and other space debris. The Sun, which is a medium-sized star, provides the energy that makes life possible on Earth.',
+      title: 'The Solar System Adventure',
+      text: 'Our solar system consists of the Sun and all the celestial bodies that orbit around it. This includes eight planets...',
       difficulty: 'intermediate',
       recordings: []
     },
     {
       id: '3',
-      title: 'Climate Change and Environmental Science',
-      text: 'Climate change represents one of the most significant challenges facing humanity in the twenty-first century. The phenomenon is characterized by long-term alterations in global weather patterns, primarily attributed to increased concentrations of greenhouse gases in the atmosphere.',
+      title: 'The Secrets of Climate Science',
+      text: 'Climate change represents one of the most significant challenges facing humanity in the twenty-first century...',
       difficulty: 'advanced',
       recordings: []
     }
   ];
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyStyles = (difficulty: string) => {
     switch (difficulty) {
-      case 'beginner': return 'bg-gradient-to-r from-success-400 to-success-600';
-      case 'intermediate': return 'bg-gradient-to-r from-warning-400 to-warning-600';
-      case 'advanced': return 'bg-gradient-to-r from-accent-400 to-accent-600';
-      default: return 'bg-gradient-to-r from-primary-400 to-primary-600';
+      case 'beginner': return { tag: 'bg-success/20 text-success-dark', border: 'border-success' };
+      case 'intermediate': return { tag: 'bg-warning/20 text-warning-dark', border: 'border-warning' };
+      case 'advanced': return { tag: 'bg-danger/20 text-danger-dark', border: 'border-danger' };
+      default: return { tag: 'bg-gray-200 text-gray-800', border: 'border-gray-300' };
     }
   };
 
   const stats = [
-    {
-      label: 'Reading Time',
-      value: `${Math.floor(userProgress.totalReadingTime / 60)}m`,
-      icon: Clock,
-      color: 'text-blue-600'
-    },
-    {
-      label: 'Accuracy',
-      value: '92%',
-      icon: TrendingUp,
-      color: 'text-green-600'
-    },
-    {
-      label: 'Badges',
-      value: userProgress.badges.length.toString(),
-      icon: Award,
-      color: 'text-purple-600'
-    },
-    {
-      label: 'Sessions',
-      value: userProgress.completedSessions.toString(),
-      icon: Book,
-      color: 'text-orange-600'
-    }
+    { label: 'Reading Time', value: `${Math.floor(userProgress.totalReadingTime / 60)}m`, icon: Clock, color: 'text-primary' },
+    { label: 'Avg. Score', value: '92%', icon: TrendingUp, color: 'text-success' },
+    { label: 'Badges', value: userProgress.badges.length.toString(), icon: Award, color: 'text-brand' },
+    { label: 'Stories Read', value: userProgress.completedSessions.toString(), icon: BookOpen, color: 'text-accent' }
   ];
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
-      {/* Welcome Section */}
+    <div className="max-w-7xl mx-auto space-y-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">
-          Welcome back! Ready to practice reading?
+        <h2 className="text-4xl font-bold text-brand-dark mb-2">
+          Ready for a reading adventure?
         </h2>
-        <p className="text-gray-600">
-          Continue your English fluency journey with interactive lessons and AI feedback
+        <p className="text-gray-600 text-lg">
+          Uztaz is cheering for you! Pick a story and let's begin.
         </p>
       </motion.div>
 
-      {/* Stats Grid */}
       <motion.div 
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        className="grid grid-cols-2 md:grid-cols-4 gap-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
       >
-        {stats.map((stat, index) => (
+        {stats.map((stat) => (
           <motion.div
             key={stat.label}
-            className="bg-white rounded-xl shadow-lg p-6 text-center"
-            whileHover={{ scale: 1.05 }}
-            transition={{ delay: index * 0.1 }}
+            className="bg-white rounded-2xl shadow-md p-6 text-center transition-transform duration-300 hover:-translate-y-2"
+            variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
           >
-            <stat.icon className={`h-8 w-8 mx-auto mb-2 ${stat.color}`} />
-            <div className="text-2xl font-bold text-gray-800">{stat.value}</div>
-            <div className="text-sm text-gray-600">{stat.label}</div>
+            <stat.icon className={`h-10 w-10 mx-auto mb-3 ${stat.color}`} strokeWidth={1.5} />
+            <div className="text-3xl font-bold text-gray-800">{stat.value}</div>
+            <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
           </motion.div>
         ))}
       </motion.div>
 
-      {/* Available Sessions */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">Choose Your Reading Level</h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {availableSessions.map((session, index) => (
+        <h3 className="text-3xl font-bold text-brand-dark mb-6">Pick a Story to Read</h3>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {availableSessions.map((session, index) => {
+            const styles = getDifficultyStyles(session.difficulty);
+            return (
             <motion.div
               key={session.id}
-              className="bg-white rounded-xl shadow-lg overflow-hidden"
-              whileHover={{ scale: 1.02 }}
-              transition={{ delay: index * 0.1 }}
+              className={`bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col border-b-4 ${styles.border}`}
+              whileHover={{ scale: 1.03, shadow: 'xl' }}
+              transition={{ type: 'spring', stiffness: 300 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 + index * 0.1 }}
             >
-              <div className={`${getDifficultyColor(session.difficulty)} p-4`}>
-                <div className="flex items-center justify-between text-white">
-                  <span className="text-sm font-medium uppercase tracking-wide">
-                    {session.difficulty}
-                  </span>
-                  <Star className="h-5 w-5" />
-                </div>
-              </div>
-              
-              <div className="p-6">
-                <h4 className="text-xl font-semibold text-gray-800 mb-3">
+              <div className="p-6 flex-grow">
+                <span className={`px-3 py-1 text-xs font-bold uppercase rounded-full ${styles.tag}`}>
+                  {session.difficulty}
+                </span>
+                <h4 className="text-xl font-semibold text-gray-800 my-3">
                   {session.title}
                 </h4>
                 <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                  {session.text.substring(0, 120)}...
+                  {session.text}
                 </p>
-                
+              </div>
+              
+              <div className="p-6 bg-gray-50">
                 <motion.button
                   onClick={() => onStartSession(session.id)}
-                  className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 px-4 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2"
-                  whileHover={{ scale: 1.02 }}
+                  className="w-full bg-brand hover:bg-brand-dark text-white py-3 px-4 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                  whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <Play className="h-5 w-5" />
@@ -154,37 +131,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </motion.button>
               </div>
             </motion.div>
-          ))}
+          )})}
         </div>
       </motion.div>
-
-      {/* Recent Activity */}
-      {recentSessions.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">Recent Activity</h3>
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="space-y-4">
-              {recentSessions.slice(0, 3).map((session) => (
-                <div key={session.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                  <div>
-                    <h4 className="font-medium text-gray-800">{session.title}</h4>
-                    <p className="text-sm text-gray-600">
-                      Completed • Score: {session.score || 0}%
-                    </p>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {session.completedAt?.toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 };

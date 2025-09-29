@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import ReadingInterface from './components/ReadingInterface';
-import ChatAssistant from './components/ChatAssistant';
+import UztazFeedback from './components/UztazFeedback';
 import { UserProgress, ReadingSession, ChatMessage } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -41,14 +41,19 @@ function App() {
     }
   ]);
 
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: uuidv4(),
-      type: 'assistant',
-      content: 'Hello! I\'m here to help you improve your English reading fluency. Click on any word while reading for pronunciation help, or ask me questions!',
-      timestamp: new Date()
-    }
-  ]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  useEffect(() => {
+    setChatMessages([
+      {
+        id: uuidv4(),
+        type: 'assistant',
+        content: 'Hello! I\'m Uztaz, your reading guide! 🦊 Ready to have some fun? Pick a story to start!',
+        timestamp: new Date()
+      }
+    ]);
+  }, []);
+  
 
   const availableSessions: ReadingSession[] = [
     {
@@ -60,14 +65,14 @@ function App() {
     },
     {
       id: '2',
-      title: 'The Solar System',
+      title: 'The Solar System Adventure',
       text: 'Our solar system consists of the Sun and all the celestial bodies that orbit around it. This includes eight planets, their moons, asteroids, comets, and other space debris. The Sun, which is a medium-sized star, provides the energy that makes life possible on Earth. The planets can be divided into two main groups: the inner rocky planets (Mercury, Venus, Earth, and Mars) and the outer gas giants (Jupiter, Saturn, Uranus, and Neptune). Each planet has unique characteristics that make it fascinating to study.',
       difficulty: 'intermediate',
       recordings: []
     },
     {
       id: '3',
-      title: 'Climate Change and Environmental Science',
+      title: 'The Secrets of Climate Science',
       text: 'Climate change represents one of the most significant challenges facing humanity in the twenty-first century. The phenomenon is characterized by long-term alterations in global weather patterns, primarily attributed to increased concentrations of greenhouse gases in the atmosphere. These gases, including carbon dioxide, methane, and nitrous oxide, trap heat from the sun and cause the Earth\'s average temperature to rise. The consequences of this warming trend are far-reaching and include rising sea levels, more frequent extreme weather events, shifts in precipitation patterns, and threats to biodiversity.',
       difficulty: 'advanced',
       recordings: []
@@ -79,26 +84,29 @@ function App() {
     if (session) {
       setCurrentSession(session);
       setCurrentView('reading');
+      setChatMessages(prev => [...prev, {
+        id: uuidv4(),
+        type: 'assistant',
+        content: `Great choice! Let's read "${session.title}". Click on any word if you need help with pronunciation.`,
+        timestamp: new Date()
+      }]);
     }
   };
 
   const handleCompleteSession = (score: number) => {
-    // Add completion logic here
     setCurrentView('dashboard');
-    
-    // Add congratulatory message
     const congratsMessage: ChatMessage = {
       id: uuidv4(),
       type: 'assistant',
-      content: `Congratulations! You completed "${currentSession?.title}" with a score of ${score}%. Great job on your pronunciation and fluency!`,
+      content: `Wow! You finished "${currentSession?.title}" with a score of ${score}%! You're doing amazing!`,
       timestamp: new Date(),
       feedback: {
         corrections: [],
         pronunciation: [],
         suggestions: [
-          'Try to speak a bit slower for better clarity',
-          'Focus on pausing between sentences',
-          'Great work on difficult words!'
+          'You read that so smoothly!',
+          'Keep up the fantastic work!',
+          'Ready for another story?'
         ]
       }
     };
@@ -106,7 +114,6 @@ function App() {
   };
 
   const handleSendMessage = (message: string) => {
-    // Add user message
     const userMessage: ChatMessage = {
       id: uuidv4(),
       type: 'user',
@@ -115,7 +122,6 @@ function App() {
     };
     setChatMessages(prev => [...prev, userMessage]);
 
-    // Simulate AI response
     setTimeout(() => {
       let assistantResponse: ChatMessage;
       
@@ -124,32 +130,14 @@ function App() {
         assistantResponse = {
           id: uuidv4(),
           type: 'assistant',
-          content: `I'd be happy to help you with "${word}"! Here's some guidance:`,
+          content: `You got it! Let's look at the word "${word}". Here's how I can help:`,
           timestamp: new Date(),
           feedback: {
             corrections: [],
             pronunciation: [word],
             suggestions: [
-              `Break "${word}" into syllables for easier pronunciation`,
-              'Practice saying it slowly first, then at normal speed',
-              'Listen to the pronunciation by clicking the word above'
-            ]
-          }
-        };
-      } else if (message.toLowerCase().includes('pronunciation')) {
-        assistantResponse = {
-          id: uuidv4(),
-          type: 'assistant',
-          content: 'Here are some tips to improve your pronunciation:',
-          timestamp: new Date(),
-          feedback: {
-            corrections: [],
-            pronunciation: [],
-            suggestions: [
-              'Record yourself reading and listen back',
-              'Focus on one sound at a time',
-              'Practice with tongue twisters',
-              'Mimic native speakers you hear'
+              `Try saying it slowly: "${word}". Click the word to hear it!`,
+              'You can do it!'
             ]
           }
         };
@@ -157,7 +145,7 @@ function App() {
         assistantResponse = {
           id: uuidv4(),
           type: 'assistant',
-          content: 'I\'m here to help with your reading practice! Feel free to ask about pronunciation, word meanings, or reading techniques.',
+          content: 'I\'m listening! Ask me anything about pronunciation or words. I\'m here to cheer you on! 🦊',
           timestamp: new Date()
         };
       }
@@ -167,10 +155,10 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50">
-      <Header userProgress={userProgress} />
+    <div className="min-h-screen bg-off-white text-gray-800">
+      <Header userProgress={userProgress} onHomeClick={() => setCurrentView('dashboard')} />
       
-      <main className="pb-8">
+      <main className="py-8 px-4">
         {currentView === 'dashboard' ? (
           <Dashboard
             userProgress={userProgress}
@@ -178,37 +166,23 @@ function App() {
             onStartSession={handleStartSession}
           />
         ) : currentSession ? (
-          <div className="max-w-7xl mx-auto p-6">
-            <div className="grid lg:grid-cols-3 gap-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
                 <ReadingInterface
                   session={currentSession}
                   onComplete={handleCompleteSession}
+                  onWordSelect={setSelectedWord}
                 />
               </div>
               <div>
-                <ChatAssistant
+                <UztazFeedback
                   messages={chatMessages}
                   onSendMessage={handleSendMessage}
                   selectedWord={selectedWord}
                 />
               </div>
             </div>
-            
-            <motion.div 
-              className="mt-6 text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <motion.button
-                onClick={() => setCurrentView('dashboard')}
-                className="text-primary-600 hover:text-primary-800 font-medium transition-colors"
-                whileHover={{ scale: 1.05 }}
-              >
-                ← Back to Dashboard
-              </motion.button>
-            </motion.div>
           </div>
         ) : null}
       </main>
