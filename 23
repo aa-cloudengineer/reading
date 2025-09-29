@@ -10,23 +10,25 @@ The app combines a playful, modern interface with powerful learning tools, creat
 
 ## ✨ Features
 
+-   **User Authentication**: Secure sign-up and login with email/password and Google, powered by Supabase.
 -   **Interactive Reading Interface**: Choose from a library of stories with varying difficulty levels (Beginner, Intermediate, Advanced).
 -   **Voice Recording & Playback**: Students can record themselves reading out loud and play it back to self-assess their pronunciation and fluency.
--   **AI-Powered Feedback with Uztaz**: Our mascot, Uztaz, provides helpful feedback on pronunciation, pacing, and missed words.
+-   **AI-Powered Feedback with Uztaz**: Our mascot, Uztaz, provides helpful feedback on pronunciation and pacing.
 -   **Click-to-Pronounce**: Click on any word in the text to hear its correct pronunciation instantly.
--   **Gamified Progress Tracking**: Stay motivated with a leveling system, XP points, and daily streak tracking.
+-   **Gamified Progress Tracking**: Stay motivated with a leveling system, XP points, and daily streak tracking, with all data saved to your account.
 -   **Modern & Responsive Design**: A clean, colorful, and mobile-friendly UI built with Tailwind CSS and Framer Motion.
 
 ## 🛠️ Tech Stack
 
 -   **Framework**: [React](https://react.dev/) with [TypeScript](https://www.typescriptlang.org/)
+-   **Backend & Auth**: [Supabase](https://supabase.io/)
 -   **Build Tool**: [Vite](https://vitejs.dev/)
 -   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 -   **Animations**: [Framer Motion](https://www.framer.com/motion/)
 -   **Icons**: [Lucide React](https://lucide.dev/)
 -   **Audio**:
     -   **Recording**: Web Audio API (`MediaRecorder`)
-    -   **Text-to-Speech**: Web Speech API via `react-speech-kit`
+    -   **Text-to-Speech**: Web Speech API (via a custom `useTextToSpeech` hook)
 
 ## 🚀 Getting Started
 
@@ -36,27 +38,35 @@ To get a local copy up and running, follow these simple steps.
 
 -   Node.js (v18 or later)
 -   Yarn package manager
+-   A Supabase account and project.
 
 ### Installation
 
-1.  **Install dependencies:**
+1.  **Clone the repository and install dependencies:**
     ```sh
     yarn install
     ```
 
-2.  **Run the development server:**
+2.  **Set up environment variables:**
+    Create a `.env` file in the root of the project and add your Supabase project credentials:
+    ```
+    VITE_SUPABASE_URL="YOUR_SUPABASE_URL"
+    VITE_SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY"
+    ```
+
+3.  **Run the development server:**
     ```sh
     yarn run dev
     ```
 
 The application will be available at `http://localhost:5173`.
 
-## 🔮 Future Enhancements
+## 🔧 Troubleshooting
 
--   **Supabase Integration**: Implement user authentication and database storage for progress, recordings, and user data.
--   **Advanced Speech Analysis**: Integrate a speech-to-text service for automated, real-time feedback and scoring.
--   **Expanded Content Library**: Add more stories, articles, and reading materials.
--   **Customizable Avatars**: Allow users to personalize their profiles.
+### Supabase Auth Rate Limiting
+If you encounter an error message like **"For security purposes, you can only request this after X seconds"** when trying to sign up or request a password reset, this is a standard security feature from Supabase to prevent spam and abuse.
+
+**Solution:** Please wait for the specified time (usually about a minute) before trying the action again. This is expected behavior during development if you make multiple auth requests in a short period.
 
 ---
 
