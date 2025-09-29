@@ -1,0 +1,219 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import Header from './components/Header';
+import Dashboard from './components/Dashboard';
+import ReadingInterface from './components/ReadingInterface';
+import ChatAssistant from './components/ChatAssistant';
+import { UserProgress, ReadingSession, ChatMessage } from './types';
+import { v4 as uuidv4 } from 'uuid';
+
+function App() {
+  const [currentView, setCurrentView] = useState<'dashboard' | 'reading'>('dashboard');
+  const [currentSession, setCurrentSession] = useState<ReadingSession | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  
+  const [userProgress] = useState<UserProgress>({
+    level: 5,
+    xp: 2350,
+    streakDays: 7,
+    totalReadingTime: 1800, // in seconds
+    completedSessions: 23,
+    badges: [
+      {
+        id: '1',
+        name: 'First Steps',
+        description: 'Complete your first reading session',
+        icon: '🏆',
+        earnedAt: new Date()
+      }
+    ]
+  });
+
+  const [recentSessions] = useState<ReadingSession[]>([
+    {
+      id: '1',
+      title: 'The Little Red Hen',
+      text: 'Sample text...',
+      difficulty: 'beginner',
+      completedAt: new Date(),
+      score: 92,
+      recordings: []
+    }
+  ]);
+
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      id: uuidv4(),
+      type: 'assistant',
+      content: 'Hello! I\'m here to help you improve your English reading fluency. Click on any word while reading for pronunciation help, or ask me questions!',
+      timestamp: new Date()
+    }
+  ]);
+
+  const availableSessions: ReadingSession[] = [
+    {
+      id: '1',
+      title: 'The Little Red Hen',
+      text: 'Once upon a time, there was a little red hen who lived on a farm. She was a very hardworking hen and always busy with her daily tasks. One day, while walking around the farmyard, she found some grains of wheat. "Who will help me plant this wheat?" asked the little red hen. The lazy cat said, "Not I." The sleepy dog said, "Not I." The noisy duck said, "Not I." "Then I will do it myself," said the little red hen. And she did.',
+      difficulty: 'beginner',
+      recordings: []
+    },
+    {
+      id: '2',
+      title: 'The Solar System',
+      text: 'Our solar system consists of the Sun and all the celestial bodies that orbit around it. This includes eight planets, their moons, asteroids, comets, and other space debris. The Sun, which is a medium-sized star, provides the energy that makes life possible on Earth. The planets can be divided into two main groups: the inner rocky planets (Mercury, Venus, Earth, and Mars) and the outer gas giants (Jupiter, Saturn, Uranus, and Neptune). Each planet has unique characteristics that make it fascinating to study.',
+      difficulty: 'intermediate',
+      recordings: []
+    },
+    {
+      id: '3',
+      title: 'Climate Change and Environmental Science',
+      text: 'Climate change represents one of the most significant challenges facing humanity in the twenty-first century. The phenomenon is characterized by long-term alterations in global weather patterns, primarily attributed to increased concentrations of greenhouse gases in the atmosphere. These gases, including carbon dioxide, methane, and nitrous oxide, trap heat from the sun and cause the Earth\'s average temperature to rise. The consequences of this warming trend are far-reaching and include rising sea levels, more frequent extreme weather events, shifts in precipitation patterns, and threats to biodiversity.',
+      difficulty: 'advanced',
+      recordings: []
+    }
+  ];
+
+  const handleStartSession = (sessionId: string) => {
+    const session = availableSessions.find(s => s.id === sessionId);
+    if (session) {
+      setCurrentSession(session);
+      setCurrentView('reading');
+    }
+  };
+
+  const handleCompleteSession = (score: number) => {
+    // Add completion logic here
+    setCurrentView('dashboard');
+    
+    // Add congratulatory message
+    const congratsMessage: ChatMessage = {
+      id: uuidv4(),
+      type: 'assistant',
+      content: `Congratulations! You completed "${currentSession?.title}" with a score of ${score}%. Great job on your pronunciation and fluency!`,
+      timestamp: new Date(),
+      feedback: {
+        corrections: [],
+        pronunciation: [],
+        suggestions: [
+          'Try to speak a bit slower for better clarity',
+          'Focus on pausing between sentences',
+          'Great work on difficult words!'
+        ]
+      }
+    };
+    setChatMessages(prev => [...prev, congratsMessage]);
+  };
+
+  const handleSendMessage = (message: string) => {
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: uuidv4(),
+      type: 'user',
+      content: message,
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, userMessage]);
+
+    // Simulate AI response
+    setTimeout(() => {
+      let assistantResponse: ChatMessage;
+      
+      if (message.toLowerCase().includes('help me with the word')) {
+        const word = message.match(/"([^"]+)"/)?.[1] || 'word';
+        assistantResponse = {
+          id: uuidv4(),
+          type: 'assistant',
+          content: `I'd be happy to help you with "${word}"! Here's some guidance:`,
+          timestamp: new Date(),
+          feedback: {
+            corrections: [],
+            pronunciation: [word],
+            suggestions: [
+              `Break "${word}" into syllables for easier pronunciation`,
+              'Practice saying it slowly first, then at normal speed',
+              'Listen to the pronunciation by clicking the word above'
+            ]
+          }
+        };
+      } else if (message.toLowerCase().includes('pronunciation')) {
+        assistantResponse = {
+          id: uuidv4(),
+          type: 'assistant',
+          content: 'Here are some tips to improve your pronunciation:',
+          timestamp: new Date(),
+          feedback: {
+            corrections: [],
+            pronunciation: [],
+            suggestions: [
+              'Record yourself reading and listen back',
+              'Focus on one sound at a time',
+              'Practice with tongue twisters',
+              'Mimic native speakers you hear'
+            ]
+          }
+        };
+      } else {
+        assistantResponse = {
+          id: uuidv4(),
+          type: 'assistant',
+          content: 'I\'m here to help with your reading practice! Feel free to ask about pronunciation, word meanings, or reading techniques.',
+          timestamp: new Date()
+        };
+      }
+
+      setChatMessages(prev => [...prev, assistantResponse]);
+    }, 1500);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50">
+      <Header userProgress={userProgress} />
+      
+      <main className="pb-8">
+        {currentView === 'dashboard' ? (
+          <Dashboard
+            userProgress={userProgress}
+            recentSessions={recentSessions}
+            onStartSession={handleStartSession}
+          />
+        ) : currentSession ? (
+          <div className="max-w-7xl mx-auto p-6">
+            <div className="grid lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <ReadingInterface
+                  session={currentSession}
+                  onComplete={handleCompleteSession}
+                />
+              </div>
+              <div>
+                <ChatAssistant
+                  messages={chatMessages}
+                  onSendMessage={handleSendMessage}
+                  selectedWord={selectedWord}
+                />
+              </div>
+            </div>
+            
+            <motion.div 
+              className="mt-6 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <motion.button
+                onClick={() => setCurrentView('dashboard')}
+                className="text-primary-600 hover:text-primary-800 font-medium transition-colors"
+                whileHover={{ scale: 1.05 }}
+              >
+                ← Back to Dashboard
+              </motion.button>
+            </motion.div>
+          </div>
+        ) : null}
+      </main>
+    </div>
+  );
+}
+
+export default App;

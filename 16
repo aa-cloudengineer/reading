@@ -1,0 +1,45 @@
+export interface ReadingSession {
+  id: string;
+  text: string;
+  title: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  completedAt?: Date;
+  score?: number;
+  recordings: Recording[];
+}
+
+export interface Recording {
+  id: string;
+  audioBlob: Blob;
+  timestamp: Date;
+  duration: number;
+}
+
+export interface UserProgress {
+  level: number;
+  xp: number;
+  streakDays: number;
+  totalReadingTime: number;
+  completedSessions: number;
+  badges: Badge[];
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earnedAt: Date;
+}
+
+export interface ChatMessage {
+  id: string;
+  type: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  feedback?: {
+    corrections: string[];
+    pronunciation: string[];
+    suggestions: string[];
+  };
+}
