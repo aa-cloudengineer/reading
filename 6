@@ -13,6 +13,7 @@ import { LoaderCircle } from 'lucide-react';
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stories, setStories] = useState<Story[]>([]);
   const [userSessions, setUserSessions] = useState<UserSession[]>([]);
@@ -101,12 +102,39 @@ function App() {
     }
   };
 
-  const handleCompleteSession = async (score: number) => {
-    if (!session?.user || !currentStory || !profile) return;
+  const handleCompleteSession = async (audioBlob: Blob | null) => {
+    if (!session?.user || !currentStory || !profile || !audioBlob) return;
     
-    setLoading(true);
+    setIsAnalyzing(true);
+    setChatMessages(prev => [...prev, { id: uuidv4(), type: 'assistant', content: "Great job! Let me listen to your recording... 🧐", timestamp: new Date() }]);
+
     try {
-      // 1. Save the session
+      // 1. Get transcript from AssemblyAI via Supabase Edge Function
+      const { data, error: functionError } = await supabase.functions.invoke('transcribe-audio', {
+        body: audioBlob,
+      });
+
+      if (functionError) throw functionError;
+      if (data.error) throw new Error(data.error);
+
+      const transcript = data.transcript;
+
+      // 2. Calculate score (simple word match percentage)
+      const originalWords = currentStory.text.toLowerCase().replace(/[.,!?]/g, '').split(/\s+/).filter(Boolean);
+      const transcribedWords = transcript.toLowerCase().replace(/[.,!?]/g, '').split(/\s+/).filter(Boolean);
+      
+      let correctCount = 0;
+      const wordMap = new Map();
+      originalWords.forEach(word => wordMap.set(word, (wordMap.get(word) || 0) + 1));
+      transcribedWords.forEach(word => {
+        if (wordMap.has(word) && wordMap.get(word) > 0) {
+          correctCount++;
+          wordMap.set(word, wordMap.get(word) - 1);
+        }
+      });
+      const score = Math.round((correctCount / originalWords.length) * 100);
+
+      // 3. Save the session
       const { error: sessionError } = await supabase.from('user_sessions').insert({
         user_id: session.user.id,
         story_id: currentStory.id,
@@ -114,8 +142,8 @@ function App() {
       });
       if (sessionError) throw sessionError;
 
-      // 2. Update user profile (XP, level etc.)
-      const newXp = profile.xp + 50; // Add 50 XP per story
+      // 4. Update user profile (XP, level etc.)
+      const newXp = profile.xp + 50;
       const newLevel = Math.floor(newXp / 1000) + 1;
 
       const { data: updatedProfile, error: profileError } = await supabase
@@ -128,16 +156,16 @@ function App() {
       
       setProfile(updatedProfile);
       
-      const congratsMessage: ChatMessage = { id: uuidv4(), type: 'assistant', content: `Wow! You finished "${currentStory?.title}" with a score of ${score}% and earned 50 XP! You're doing amazing!`, timestamp: new Date(), feedback: { corrections: [], pronunciation: [], suggestions: ['You read that so smoothly!', 'Keep up the fantastic work!', 'Ready for another story?'] } };
+      const congratsMessage: ChatMessage = { id: uuidv4(), type: 'assistant', content: `Wow! Based on my analysis, you read "${currentStory?.title}" with ${score}% accuracy and earned 50 XP! You're doing amazing!`, timestamp: new Date(), feedback: { corrections: [], pronunciation: [], suggestions: ['You read that so smoothly!', 'Keep up the fantastic work!', 'Ready for another story?'] } };
       setChatMessages(prev => [...prev, congratsMessage]);
 
-    } catch(error) {
+    } catch(error: any) {
       console.error("Error completing session:", error);
-      const errorMessage: ChatMessage = { id: uuidv4(), type: 'assistant', content: `Oops! There was an error saving your progress. Please try again.`, timestamp: new Date() };
+      const errorMessage: ChatMessage = { id: uuidv4(), type: 'assistant', content: `Oops! There was an error analyzing your audio. ${error.message || 'Please try again.'}`, timestamp: new Date() };
       setChatMessages(prev => [...prev, errorMessage]);
     } finally {
       setCurrentView('dashboard');
-      setLoading(false);
+      setIsAnalyzing(false);
     }
   };
 
@@ -160,10 +188,11 @@ function App() {
     await supabase.auth.signOut();
   };
 
-  if (loading && !profile) {
+  if ((loading || isAnalyzing) && !profile) {
     return (
-      <div className="min-h-screen bg-off-white flex items-center justify-center">
+      <div className="min-h-screen bg-off-white flex flex-col items-center justify-center space-y-4">
         <LoaderCircle className="w-12 h-12 text-brand animate-spin" />
+        {isAnalyzing && <p className="text-gray-600 font-medium">Uztaz is analyzing your reading...</p>}
       </div>
     );
   }
@@ -192,6 +221,7 @@ function App() {
                       story={currentStory}
                       onComplete={handleCompleteSession}
                       onWordSelect={setSelectedWord}
+                      isAnalyzing={isAnalyzing}
                     />
                   </div>
                   <div>

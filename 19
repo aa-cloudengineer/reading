@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, Square, Play, CheckCircle, Volume2, RotateCcw } from 'lucide-react';
+import { Mic, Square, Play, CheckCircle, Volume2, RotateCcw, LoaderCircle } from 'lucide-react';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { Story } from '../types';
 
 interface ReadingInterfaceProps {
   story: Story;
-  onComplete: (score: number) => void;
+  onComplete: (audioBlob: Blob | null) => void;
   onWordSelect: (word: string | null) => void;
+  isAnalyzing: boolean;
 }
 
-const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ story, onComplete, onWordSelect }) => {
+const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ story, onComplete, onWordSelect, isAnalyzing }) => {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   
@@ -138,20 +139,21 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ story, onComplete, 
             }`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            disabled={isAnalyzing}
           >
             {isRecording ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             <span>{isRecording ? 'Stop Recording' : (audioBlob ? 'Record Again' : 'Record')}</span>
           </motion.button>
 
           <motion.button
-            onClick={() => onComplete(Math.floor(Math.random() * (98 - 85 + 1) + 85))} // Random score between 85-98
+            onClick={() => onComplete(audioBlob)}
             className="flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-semibold transition-all shadow-md bg-success text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            disabled={!audioBlob || isRecording}
+            disabled={!audioBlob || isRecording || isAnalyzing}
           >
-            <CheckCircle className="h-5 w-5" />
-            <span>Finish & Get Feedback</span>
+            {isAnalyzing ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <CheckCircle className="h-5 w-5" />}
+            <span>{isAnalyzing ? 'Analyzing...' : 'Finish & Get Feedback'}</span>
           </motion.button>
         </div>
       </div>
