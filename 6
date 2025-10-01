@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import ReadingInterface from './components/ReadingInterface';
 import UztazFeedback from './components/UztazFeedback';
 import Auth from './components/Auth';
+import HistoryReport from './components/HistoryReport';
 import { Profile, Story, UserSession, ChatMessage } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { LoaderCircle } from 'lucide-react';
@@ -18,7 +19,7 @@ function App() {
   const [stories, setStories] = useState<Story[]>([]);
   const [userSessions, setUserSessions] = useState<UserSession[]>([]);
   
-  const [currentView, setCurrentView] = useState<'dashboard' | 'reading'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'reading' | 'history'>('dashboard');
   const [currentStory, setCurrentStory] = useState<Story | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -64,13 +65,12 @@ function App() {
           if (storiesError) throw storiesError;
           setStories(storiesData);
           
-          // Fetch user sessions
+          // Fetch all user sessions
           const { data: sessionsData, error: sessionsError } = await supabase
             .from('user_sessions')
             .select('*, stories(title)')
             .eq('user_id', session.user.id)
-            .order('completed_at', { ascending: false })
-            .limit(5);
+            .order('completed_at', { ascending: false });
           if (sessionsError) throw sessionsError;
           setUserSessions(sessionsData as UserSession[]);
 
@@ -135,12 +135,14 @@ function App() {
       const score = Math.round((correctCount / originalWords.length) * 100);
 
       // 3. Save the session
-      const { error: sessionError } = await supabase.from('user_sessions').insert({
+      const { data: newSessionData, error: sessionError } = await supabase.from('user_sessions').insert({
         user_id: session.user.id,
         story_id: currentStory.id,
         score: score
-      });
+      }).select('*, stories(title)').single();
       if (sessionError) throw sessionError;
+      
+      setUserSessions(prev => [newSessionData as UserSession, ...prev]);
 
       // 4. Update user profile (XP, level etc.)
       const newXp = profile.xp + 50;
@@ -197,43 +199,66 @@ function App() {
     );
   }
 
+  const renderContent = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return (
+          <Dashboard
+            profile={profile}
+            stories={stories}
+            userSessions={userSessions}
+            onStartSession={handleStartSession}
+            loading={loading}
+          />
+        );
+      case 'history':
+        return (
+          <HistoryReport
+            profile={profile}
+            userSessions={userSessions}
+          />
+        );
+      case 'reading':
+        return currentStory ? (
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <ReadingInterface
+                  story={currentStory}
+                  onComplete={handleCompleteSession}
+                  onWordSelect={setSelectedWord}
+                  isAnalyzing={isAnalyzing}
+                />
+              </div>
+              <div>
+                <UztazFeedback
+                  messages={chatMessages}
+                  onSendMessage={handleSendMessage}
+                  selectedWord={selectedWord}
+                />
+              </div>
+            </div>
+          </div>
+        ) : null;
+      default:
+        return null;
+    }
+  }
+
   return (
     <div className="min-h-screen bg-off-white text-gray-800">
       {!session ? (
         <Auth />
       ) : (
         <>
-          <Header profile={profile} onHomeClick={() => setCurrentView('dashboard')} onSignOut={handleSignOut} />
-          <main className="py-8 px-4">
-            {currentView === 'dashboard' ? (
-              <Dashboard
-                profile={profile}
-                stories={stories}
-                userSessions={userSessions}
-                onStartSession={handleStartSession}
-                loading={loading}
-              />
-            ) : currentStory ? (
-              <div className="max-w-7xl mx-auto">
-                <div className="grid lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2">
-                    <ReadingInterface
-                      story={currentStory}
-                      onComplete={handleCompleteSession}
-                      onWordSelect={setSelectedWord}
-                      isAnalyzing={isAnalyzing}
-                    />
-                  </div>
-                  <div>
-                    <UztazFeedback
-                      messages={chatMessages}
-                      onSendMessage={handleSendMessage}
-                      selectedWord={selectedWord}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : null}
+          <Header 
+            profile={profile} 
+            onHomeClick={() => setCurrentView('dashboard')} 
+            onHistoryClick={() => setCurrentView('history')}
+            onSignOut={handleSignOut} 
+          />
+          <main className="py-6 sm:py-8 px-4 sm:px-6">
+            {renderContent()}
           </main>
         </>
       )}

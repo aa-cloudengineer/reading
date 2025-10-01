@@ -28,7 +28,8 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      const mediaRecorder = new MediaRecorder(stream);
+      const options = { mimeType: 'audio/webm' };
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -39,7 +40,7 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/wav' });
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         setAudioBlob(blob);
         chunksRef.current = [];
       };
